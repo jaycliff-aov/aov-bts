@@ -335,10 +335,14 @@ document.addEventListener('DOMContentLoaded', function () {
         var days = getDays(start_date_element.value, end_date_element.value),
             list, k1, len1, k2, len2, agent, date_obj, date, day, key, mode, schedule,
             employee_id;
+        if (event.cancelable) {
+            event.preventDefault();
+        }
         console.log('days', days);
         if (days < 1) {
             end_date_element.setCustomValidity('End date should either be on or after the starting date.');
             end_date_element.reportValidity();
+            return false;
         }
         list = [];
         list.push(output_keys); // header
@@ -368,9 +372,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         exportCSV("data:text/csv;charset=utf-8," + Papa.unparse(list));
         // console.log(list, csv);
-        if (event.cancelable) {
-            event.preventDefault();
-        }
     }, false);
     agent_data_element.on('click dragenter dragleave dragover drop', agentDataEventHandler, false);
     schedule_element.on('click dragenter dragleave dragover drop', agentDataEventHandler, false);
