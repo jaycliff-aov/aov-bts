@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, false);
     form_element.on('submit', function (event) {
         var days = getDays(start_date_element.value, end_date_element.value),
-            list, k1, len1, k2, len2, agent, date_obj, date, day, key, mode, schedule,
+            list, k1, len1, k2, len2, agent, date_obj, date, day, key, s_index, mode, schedule,
             employee_id;
         if (event.cancelable) {
             event.preventDefault();
@@ -359,11 +359,12 @@ document.addEventListener('DOMContentLoaded', function () {
             for (k2 = 0, len2 = list_of_agents_data.length; k2 < len2; k2 += 1) {
                 agent = list_of_agents_data[k2];
                 employee_id = agent['id number'];
-                mode = agent[day];
-                if (mode) {
-                    schedule = map_of_schedule_data[mode];
+                s_index = agent[day];
+                if (s_index) {
+                    schedule = map_of_schedule_data[s_index];
                     for (key in schedule) {
                         if (hasOwnProperty.call(schedule, key)) {
+                            mode = (key.indexOf('in') !== -1) ? 1 : 2;
                             list.push([employee_id, mode, date + ' ' + schedule[key], company_alias_string]);
                         }
                     }
