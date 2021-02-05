@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="theme-color" content="#eff7c2" />
+        <!-- <meta name="theme-color" content="#404040" /> -->
+        <title>Biometrics Timelogger System</title>
+        <link rel="shortcut icon" href="./favicon.ico" type="image/vnd.microsoft.icon" />
+        <!-- <script type="text/javascript" src="./lib/documentRenderAndClone.js"></script> -->
+		<style type="text/css">
+			* {
+                box-sizing: border-box;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+            html, body {
+                height: 100%;
+                min-height: 100%;
+            }
+            /* body {
+                display: flex;
+            } */
+            #wrapper {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                padding: 8px;
+            }
+            #wrapper > header {
+                align-items: center;
+                display: flex;
+                height: 10vh;
+                /* justify-content: center; */
+            }
+            #wrapper > header .title {
+                font-weight: bold;
+            }
+            #wrapper > header .title span {
+                color: purple;
+            }
+            #wrapper > header > * {
+                flex: 1;
+            }
+            #duration {
+                align-items: center;
+                display: flex;
+                justify-content: flex-end;
+            }
+            #duration > * {
+                margin-left: 16px;
+            }
+            #duration > *:first-child {
+                margin-left: 0;
+            }
+            #duration button {
+                cursor: pointer;
+                display: block;
+                padding: 4px;
+            }
+            section#mia {
+                display: flex;
+                flex: 1;
+            }
+            section#mia input[type="file"] {
+                /* display: none; */
+                display: block;
+                height: 1px;
+                opacity: 0;
+                pointer-events: none;
+                position: absolute;
+            }
+            section#mia > * {
+                background-color: #f8f8f8;
+                align-items: center;
+                border: #cfcfcf 2px dashed;
+                cursor: pointer;
+                display: flex;
+                flex: 1;
+                flex-direction: column;
+                justify-content: center;
+                margin-left: 8px;
+                padding: 8px;
+            }
+            section#mia > .filled {
+                background-color: #e6ffe6;
+                border-color: green;
+                cursor: default;
+            }
+            section#mia > *:first-child {
+                margin-left: 0;
+            }
+            section#mia > *::before {
+                content: attr(data-name);
+                font-size: 2em;
+                margin-bottom: 1em;
+                pointer-events: none;
+            }
+            section#mia > *::after {
+                content: attr(data-text);
+                pointer-events: none;
+            }
+            section#mia .highlight {
+                background-color: #fff1d7;
+                border-color: orange;
+            }
+            /* #agent-data {
+                background-color: #eeffcc;
+            } */
+        </style>
+    </head>
+    <body>
+        <form id="wrapper">
+            <header>
+                <div class="title"><span>B</span>iometrics <span>T</span>imelogger <span>S</span>ystem</div>
+                <div id="duration">
+                    <label>From: <input name="start_date" required type="date" /></label>
+                    <label>To: <input name="end_date" required type="date" /></label>
+                    <button type="submit">Download Timelog CSV</button>
+                    <button type="button" class="reset">Reset</button>
+                </div>
+            </header>
+            <section id="mia">
+                <label id="agent-data" data-name="Agents Data" data-text="Drop a CSV file here, or tap/click here to select a CSV file">
+                    <input required type="file" name="agents" accept=".csv" />
+                </label>
+                <label id="schedule" data-name="Schedule" data-text="Drop a CSV file here, or tap/click here to select a CSV file">
+                    <input required type="file" name="sched" accept=".csv" />
+                </label>
+            </section>
+        </form>
+        <script type="text/javascript" src="./papaparse.min.js"></script>
+        <script type="text/javascript" src="./main.js"></script>
+    </body>
+</html>
