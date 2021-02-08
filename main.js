@@ -77,10 +77,11 @@ if (typeof Date.prototype.getDateString !== "function") {
         "use strict";
         var mm = this.getMonth() + 1; // getMonth() is zero-based
         var dd = this.getDate();
-        return [this.getFullYear(),
-            (mm>9 ? '' : '0') + mm,
-            (dd>9 ? '' : '0') + dd
-            ].join('\/');
+        return [
+            (mm > 9 ? '' : '0') + mm,
+            (dd > 9 ? '' : '0') + dd,
+            this.getFullYear()
+        ].join('\/');
     };
 }
 if (typeof Date.prototype.addDays !== "function") {
@@ -96,8 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var hasOwnProperty = Object.prototype.hasOwnProperty, exportCSV;
     var form_element = document.getElementById('wrapper'),
         list_of_day_names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        output_keys = ['Employee Number', 'Mode', 'Datetime', 'Company Alias'],
-        company_alias_string = 'Eversun Software Philippines Corp. Davao',
+        output_keys = ['Employee Number', 'Mode', 'Datetime'],
         start_date_element = form_element.querySelector('#duration input[name="start_date"]'),
         end_date_element = form_element.querySelector('#duration input[name="end_date"]'),
         sd_object = null,
@@ -182,10 +182,10 @@ document.addEventListener('DOMContentLoaded', function () {
             minutes = Number(time.match(/:(\d+)/)[1]),
             am_pm = time.match(/\s(.*)$/)[1],
             s_hours, s_minutes;
-        if (am_pm === "PM" && hours < 12) {
+        if ((am_pm === "PM" || am_pm === "NN") && hours < 12) {
             hours = hours + 12;
         }
-        if (am_pm === "AM" && hours === 12) {
+        if ((am_pm === "AM" || am_pm === "MN") && hours === 12) {
             hours = hours - 12;
         }
         s_hours = hours.toString();
@@ -314,11 +314,10 @@ document.addEventListener('DOMContentLoaded', function () {
     exportCSV = (function () {
         var link = document.createElement("a");
         link.setAttribute('style', 'display: none;');
-        document.body.appendChild(link); // Required for FF
+        document.body.appendChild(link); // Required for FireFox. Fox you!
         return function exportCSV(csv_content) {
-            var encoded_uri = encodeURI(csv_content);
-            link.setAttribute("href", encoded_uri);
-            link.setAttribute("download", "bts_output.csv");
+            link.setAttribute("href", encodeURI(csv_content));
+            link.setAttribute("download", "BTS - [" + start_date_element.value + " to " + end_date_element.value + "].csv");
             link.click(); // This will download the data file named "my_data.csv".
         };
     }());
@@ -365,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     for (key in schedule) {
                         if (hasOwnProperty.call(schedule, key)) {
                             mode = (key.indexOf('in') !== -1) ? 1 : 2;
-                            list.push([employee_id, mode, date + ' ' + schedule[key], company_alias_string]);
+                            list.push([employee_id, mode, date + ' ' + schedule[key]]);
                         }
                     }
                 }
