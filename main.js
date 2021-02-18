@@ -199,13 +199,18 @@ document.addEventListener('DOMContentLoaded', function () {
         return s_hours + ":" + s_minutes;
     }
     function formatSchedule(list) {
-        var k, len, item, key;
+        var k, len, item, key, val;
         for (k = 0, len = list.length; k < len; k += 1) {
             item = list[k];
             for (key in item) {
                 // item[key] = item[key].replace('AM', '').trim();
                 // console.log(item[key]);
-                item[key] = to24(item[key]);
+                val = item[key];
+                if (val) {
+                    item[key] = to24(val);
+                } else {
+                    item[key] = '';
+                }
             }
         }
     }
@@ -332,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, false);
     form_element.on('submit', function (event) {
         var days = getDays(start_date_element.value, end_date_element.value),
-            list, k1, len1, k2, len2, agent, date_obj, date, day, key, s_index, mode, schedule,
+            list, k1, len1, k2, len2, agent, date_obj, date, day, key, s_index, mode, schedule, sched_val,
             employee_id;
         if (event.cancelable) {
             event.preventDefault();
@@ -363,8 +368,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     schedule = map_of_schedule_data[s_index];
                     for (key in schedule) {
                         if (hasOwnProperty.call(schedule, key)) {
-                            mode = (key.indexOf('in') !== -1) ? 1 : 2;
-                            list.push([employee_id, mode, date + ' ' + schedule[key]]);
+                            sched_val = schedule[key];
+                            if (sched_val) {
+                                mode = (key.indexOf('in') !== -1) ? 1 : 2;
+                                list.push([employee_id, mode, date + ' ' + sched_val]);
+                            }
                         }
                     }
                 }
