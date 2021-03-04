@@ -94,8 +94,9 @@ if (typeof Date.prototype.addDays !== "function") {
 }
 document.addEventListener('DOMContentLoaded', function () {
     "use strict";
-    var hasOwnProperty = Object.prototype.hasOwnProperty, exportCSV;
-    var form_element = document.getElementById('wrapper'),
+    var body = document.body, body_dataset = body.dataset, hasOwnProperty = Object.prototype.hasOwnProperty, exportCSV;
+    var DEBUG = body_dataset.debug !== undefined;
+    var form_element = document.getElementById('wrapper'), key,
         list_of_day_names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
         output_keys = ['Employee Number', 'Mode', 'Datetime'],
         start_date_element = form_element.querySelector('#duration input[name="start_date"]'),
@@ -111,16 +112,21 @@ document.addEventListener('DOMContentLoaded', function () {
         list_of_agents_data,
         list_of_schedule_data,
         map_of_schedule_data = Object.create(null);
+    for (key in body_dataset) {
+        if (body_dataset.hasOwnProperty(key)) {
+            delete body_dataset[key];
+        }
+    }
     list_of_day_names.forEach(function (v, i, list) {
         list[i] = v.toLowerCase();
     });
-    // console.log(day_names);
+    // DEBUG && console.log(day_names);
     // date_string.replace(/-/g, '\/')
     function resetValidation(no_report) {
         if (!this.checkValidity()) {
             this.setCustomValidity('');
             !no_report && this.reportValidity();
-            console.log('reset custom validation message');
+            DEBUG && console.log('reset custom validation message');
         }
     }
     function resetSystem() {
@@ -198,13 +204,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return s_hours + ":" + s_minutes;
     }
+    function getMinutesFrom24(time) {
+        var list = time.split(':');
+        return (Number(list[0]) * 60) + Number(list[1]);
+    }
     function formatSchedule(list) {
         var k, len, item, key, val;
         for (k = 0, len = list.length; k < len; k += 1) {
             item = list[k];
             for (key in item) {
                 // item[key] = item[key].replace('AM', '').trim();
-                // console.log(item[key]);
+                // DEBUG && console.log(item[key]);
                 val = item[key];
                 if (val) {
                     item[key] = to24(val);
@@ -215,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     function handleFile(type, file) {
-        console.log(file);
+        DEBUG && console.log(file);
         Papa.parse(file, {
             complete(results) {
                 var data = results.data, keys = data.splice(0, 1)[0], formatted_data, k, len, item;
@@ -226,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         ad_csv = file;
                         formatted_data = formatEntries(keys, data);
                         list_of_agents_data = formatted_data;
-                        console.log(keys, formatted_data);
+                        DEBUG && console.log(keys, formatted_data);
                         agent_data_element.classList.add('filled');
                         agent_data_element.dataset.text = file.name;
                         break;
@@ -244,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         formatSchedule(formatted_data);
                         schedule_element.classList.add('filled');
                         schedule_element.dataset.text = file.name;
-                        console.log(keys, formatted_data, map_of_schedule_data);
+                        DEBUG && console.log(keys, formatted_data, map_of_schedule_data);
                         break;
                     }
                 }
@@ -279,12 +289,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 this.querySelector('input[type="file"').files = files;
-                // console.log(files);
+                // DEBUG && console.log(files);
                 /* falls through */
             }
             case 'dragleave': {
                 this.classList.remove('highlight');
-                console.log('LEAVING SO EARLY?');
+                DEBUG && console.log('LEAVING SO EARLY?');
                 break;
             }
             case 'dragover': {
@@ -310,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         if (event.cancelable && prevent_default) {
-            // console.log('Prevent default for', event.type);
+            // DEBUG && console.log('Prevent default for', event.type);
             event.preventDefault();
         }
         event.stopPropagation();
@@ -319,8 +329,11 @@ document.addEventListener('DOMContentLoaded', function () {
     exportCSV = (function () {
         var link = document.createElement("a");
         link.setAttribute('style', 'display: none;');
-        document.body.appendChild(link); // Required for FireFox. Fox you!
+        body.appendChild(link); // Required for FireFox. Fox you!
         return function exportCSV(csv_content) {
+            if (!link.parentElement) {
+                body.appendChild(link); // Required for FireFox. Fox you!
+            }
             link.setAttribute("href", encodeURI(csv_content));
             link.setAttribute("download", "BTS - [" + start_date_element.value + " to " + end_date_element.value + "].csv");
             link.click(); // This will download the data file named "my_data.csv".
@@ -329,20 +342,22 @@ document.addEventListener('DOMContentLoaded', function () {
     reset_button.on('click', resetSystem, false);
     start_date_element.on('change', function () {
         sd_object = new Date(this.value);
-        console.log(this.value);
+        DEBUG && console.log(this.value);
     }, false);
     end_date_element.on('change', function () {
         resetValidation.call(this);
-        console.log(this.value);
+        DEBUG && console.log(this.value);
     }, false);
     form_element.on('submit', function (event) {
         var days = getDays(start_date_element.value, end_date_element.value),
-            list, k1, len1, k2, len2, agent, date_obj, date, day, key, s_index, mode, schedule, sched_val,
+            list, k1, len1, k2, len2,
+            agent, date_obj, date, tomorrow, day, key, s_index, mode, schedule, schedule_time,
+            starting_minutes = null, minutes = 0, fdate,
             employee_id;
         if (event.cancelable) {
             event.preventDefault();
         }
-        console.log('days', days);
+        DEBUG && console.log('days', days);
         if (days < 1) {
             end_date_element.setCustomValidity('End date should either be on or after the starting date.');
             end_date_element.reportValidity();
@@ -358,28 +373,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 date_obj = sd_object;
                 date = sd_object.getDateString();
             }
+            tomorrow = date_obj.addDays(1).getDateString();
             day = list_of_day_names[date_obj.getDay()];
-            // console.log(day);
+            // DEBUG && console.log(day);
             for (k2 = 0, len2 = list_of_agents_data.length; k2 < len2; k2 += 1) {
                 agent = list_of_agents_data[k2];
                 employee_id = agent['id number'];
                 s_index = agent[day];
                 if (s_index) {
                     schedule = map_of_schedule_data[s_index];
+                    fdate = date;
                     for (key in schedule) {
                         if (hasOwnProperty.call(schedule, key)) {
-                            sched_val = schedule[key];
-                            if (sched_val) {
-                                mode = (key.indexOf('in') !== -1) ? 1 : 2;
-                                list.push([employee_id, mode, date + ' ' + sched_val]);
+                            schedule_time = schedule[key];
+                            mode = (key.indexOf('in') !== -1) ? 1 : 2;
+                            if (schedule_time) {
+                                if (starting_minutes === null) {
+                                    if (mode === 1) {
+                                        starting_minutes = getMinutesFrom24(schedule_time);
+                                    }
+                                } else {
+                                    if (starting_minutes && fdate !== tomorrow) {
+                                        minutes = getMinutesFrom24(schedule_time);
+                                        if (starting_minutes > minutes) {
+                                            // Set the date to next day
+                                            fdate = tomorrow;
+                                        }
+                                    }
+                                }
+                                list.push([employee_id, mode, fdate + ' ' + schedule_time]);
                             }
                         }
                     }
+                    starting_minutes = null;
                 }
             }
         }
         exportCSV("data:text/csv;charset=utf-8," + Papa.unparse(list));
-        // console.log(list, csv);
+        // DEBUG && console.log(list, csv);
     }, false);
     agent_data_element.on('click dragenter dragleave dragover drop', agentDataEventHandler, false);
     schedule_element.on('click dragenter dragleave dragover drop', agentDataEventHandler, false);
@@ -390,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
         handleFile('s', this.files[0]);
     }, false);
     // this.addEventListener('drop', function (event) {
-    //     console.log(event.type, 'on', this);
+    //     DEBUG && console.log(event.type, 'on', this);
     //     event.preventDefault();
     // }, false);
 }, false);
